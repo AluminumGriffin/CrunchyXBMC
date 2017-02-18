@@ -28,6 +28,7 @@ import string
 import datetime
 import StringIO
 import cookielib
+import pprint  #pretty print, debug only, remove
 try:
     import cPickle as pickle
 except:
@@ -1235,33 +1236,79 @@ def search(args):
     except:
         search_page = '0'
 
-
+    #Output debug info
     print ("Searching for: %s (p:%s) " % (search, search_page))
     print ("http://www.crunchyroll.com/search_page?sp=%s&st=a&q=%s" % (search_page, search))
 
-    try:
+    try: #Attempt to open and test for failure
         url = urllib2.urlopen("http://www.crunchyroll.com/search_page?sp=%s&st=a&q=%s" % (search_page, search))
     except:
         xbmcgui.Dialog().notification("Crunchyroll - Search","Unable to search",xbmcgui.NOTIFICATION_ERROR)
         return "False"
 
+    #Pretty up the response and unzip it if needed
     json_data = url.read().strip();
     if url.headers.get('content-encoding', None) == 'gzip':
         json_data = gzip.GzipFile(fileobj=StringIO.StringIO(json_data))
         json_data = json_data.read().decode('utf-8', 'ignore')
 
+    #We have all data we wanted
     url.close()
-    json_data = json_data[10:-2].strip()
-    print ("Sq12: %s" % json_data)
-    data = json.loads(json_data)
-    print ("Sq12: ", data)
+
+    json_data = json_data[10:-2].strip() #Remove unwanted header
+    data = json.loads(json_data)         #Convert from json to list
+    out_of = data['data']['aux_count']   #Get number of total hits
+
+    #Test if we got any hits at all
+    if not int(out_of) > 0:
+        xbmcgui.Dialog().notification("Crunchyroll - Search","Nothing found",xbmcgui.NOTIFICATION_ERROR)
+        return "False"
+ 
+
+    #Get the episode information
+    i = data['data']['aux_html']
+    i = re.sub(r'(media-thumb-wide)" src="([^"]*)[^{]*{([^}]*)}',r'{\3,"\1":"\2"}',i)
+    i = re.sub(r'^[^{]*{','{',i)
+    i = re.sub(r'}[^}]*$','}',i)
+    i = re.sub(r'}[^{]*{','}{',i)
+    arrI = i.split("}")
+    items = []
+    for j in range(0,len(arrI)):
+        if len(arrI[j]) > 0:
+            items.append(json.loads(arrI[j]+"}"))
+            pprint.PrettyPrinter().pprint(items[len(items)-1])
+    #We now have all hits in a list (items) of lists
+
+    #Exit if no parsable hits
+    if not (len(items)) > 0:
+        xbmcgui.Dialog().notification("Crunchyroll - Search","Nothing to parse",xbmcgui.NOTIFICATION_ERROR)
+        return "False"
+
+    #Add to UI
+    for j in items:
+        a = {'plot': j['description'],
+             'url': j['link'], #Partial, starts at /series/
+             'title': j['series'] + " - " + j['name'],
+             'episode': j['ordernum'],
+             'media_type': 'anime',
+             'mode': 'list_series',
+             'id': re.search(r'[\d]*$',j['link']).group(0),
+             'thumb': j['media-thumb-wide']}
+        crm.add_item(args,a,isFolder=False)
+        crm.endofdirectory('none')
+#Unused data
+#        j['created']       # "X days ago"
+#        j['owner']         # production company?
+#        j['restrictions']  # Premium members only, as text
+
+
     return #Fast exit
 
 
-    #Strip out extras, like referrals
-    url = re.sub(r'\?.*', '', url)
-    #Strip down to getting the show id only
-    episode_id = re.sub(r'.*-', '', url)
+    ##Strip out extras, like referrals
+    #url = re.sub(r'\?.*', '', url)
+    ##Strip down to getting the show id only
+    #episode_id = re.sub(r'.*-', '', url)
 
     if not (int(episode_id) > 0):
         xbmcgui.Dialog().notification("Crunchyroll - Random","Unable to fetch episode id",xbmcgui.NOTIFICATION_ERROR)

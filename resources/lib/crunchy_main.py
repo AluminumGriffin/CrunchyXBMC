@@ -92,7 +92,7 @@ def endofdirectory(sortMethod='none'):
                               updateListing = dontAddToHierarchy)
 
 
-def set_info_defaults (args,info):
+def set_info_defaults (args, info):
     # Defaults in dict. Use 'None' instead of None so it is compatible for
     # quote_plus in parseArgs.
     info.setdefault('url',          'None')
