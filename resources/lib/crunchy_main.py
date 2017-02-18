@@ -126,6 +126,7 @@ def set_info_defaults (args, info):
 
 def build_url (info):
     # Create params for xbmcplugin module
+    info['plot'] = info['plot'].encode('utf8')  #Ugly hack
     s = sys.argv[0]    +\
         '?url='        + urllib.quote_plus(info['url'])          +\
         '&mode='       + urllib.quote_plus(info['mode'])         +\

@@ -28,7 +28,6 @@ import string
 import datetime
 import StringIO
 import cookielib
-import pprint  #pretty print, debug only, remove
 try:
     import cPickle as pickle
 except:
@@ -1276,7 +1275,6 @@ def search(args):
     for j in range(0,len(arrI)):
         if len(arrI[j]) > 0:
             items.append(json.loads(arrI[j]+"}"))
-            pprint.PrettyPrinter().pprint(items[len(items)-1])
     #We now have all hits in a list (items) of lists
 
     #Exit if no parsable hits
@@ -1288,14 +1286,15 @@ def search(args):
     for j in items:
         a = {'plot': j['description'],
              'url': j['link'], #Partial, starts at /series/
-             'title': j['series'] + " - " + j['name'],
+             'title': j['series'] + " - " + j['ordernum'] + " - " + j['name'],
              'episode': j['ordernum'],
              'media_type': 'anime',
-             'mode': 'list_series',
+             'mode': 'videoplay',
              'id': re.search(r'[\d]*$',j['link']).group(0),
              'thumb': j['media-thumb-wide']}
         crm.add_item(args,a,isFolder=False)
-        crm.endofdirectory('none')
+    crm.endofdirectory('none')
+    print("llama")
 #Unused data
 #        j['created']       # "X days ago"
 #        j['owner']         # production company?
@@ -1304,33 +1303,6 @@ def search(args):
 
     return #Fast exit
 
-
-    ##Strip out extras, like referrals
-    #url = re.sub(r'\?.*', '', url)
-    ##Strip down to getting the show id only
-    #episode_id = re.sub(r'.*-', '', url)
-
-    if not (int(episode_id) > 0):
-        xbmcgui.Dialog().notification("Crunchyroll - Random","Unable to fetch episode id",xbmcgui.NOTIFICATION_ERROR)
-        return "False"
-
-    fields = "media.series_id,media.series_name"
-    values = {'media_id': episode_id,
-              'fields':   fields}
-
-    request = makeAPIRequest(args, 'info', values)
-    
-    #And try to list the show, just like 'goto series'
-    try:
-        args.series_id = request['data']['series_id']
-    except:
-        xbmcgui.Dialog().notification("Crunchyroll - Random","Unable to fetch random show id",xbmcgui.NOTIFICATION_ERROR)
-        return "False"
-    else:
-        #And then list the series
-        list_collections(args,True)
-
-   
 
 def pretty(d, indent=1):
     """Pretty printer for dictionaries.
