@@ -258,6 +258,9 @@ def show_main(args):
              {'title':      drama,
               'mode':       'channels',
               'media_type': 'drama'})
+    add_item(args,
+             {'title':      'Search',
+              'mode':       'search'})
     endofdirectory()
 
 
@@ -399,6 +402,8 @@ def check_mode(args):
         crj.start_playback(args)
     elif mode == 'get_random':
         crj.get_random(args)
+    elif mode == 'search':
+        crj.search(args)
     else:
         fail(args)
 

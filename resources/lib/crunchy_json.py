@@ -1220,6 +1220,69 @@ def get_random(args):
         #And then list the series
         list_collections(args,True)
 
+
+def search(args):
+    """Search for show
+
+    """
+    if not (hasattr(args,'search')):
+        search = str(xbmcgui.Dialog().input('Enter search phrase')) #!!Lang!!
+    else:
+        search = str(urllib.urldecode(args['search']));
+    urllib.quote_plus(search) #become url-friendly
+    try: # Make sure search page is a number
+        search_page = str(int(args['search_page']))
+    except:
+        search_page = '0'
+
+
+    print ("Searching for: %s (p:%s) " % (search, search_page))
+    print ("http://www.crunchyroll.com/search_page?sp=%s&st=a&q=%s" % (search_page, search))
+
+    try:
+        url = urllib2.urlopen("http://www.crunchyroll.com/search_page?sp=%s&st=a&q=%s" % (search_page, search))
+    except:
+        xbmcgui.Dialog().notification("Crunchyroll - Search","Unable to search",xbmcgui.NOTIFICATION_ERROR)
+        return "False"
+
+    json_data = url.read().strip();
+    if url.headers.get('content-encoding', None) == 'gzip':
+        json_data = gzip.GzipFile(fileobj=StringIO.StringIO(json_data))
+        json_data = json_data.read().decode('utf-8', 'ignore')
+
+    url.close()
+    json_data = json_data[10:-2].strip()
+    print ("Sq12: %s" % json_data)
+    data = json.loads(json_data)
+    print ("Sq12: ", data)
+    return #Fast exit
+
+
+    #Strip out extras, like referrals
+    url = re.sub(r'\?.*', '', url)
+    #Strip down to getting the show id only
+    episode_id = re.sub(r'.*-', '', url)
+
+    if not (int(episode_id) > 0):
+        xbmcgui.Dialog().notification("Crunchyroll - Random","Unable to fetch episode id",xbmcgui.NOTIFICATION_ERROR)
+        return "False"
+
+    fields = "media.series_id,media.series_name"
+    values = {'media_id': episode_id,
+              'fields':   fields}
+
+    request = makeAPIRequest(args, 'info', values)
+    
+    #And try to list the show, just like 'goto series'
+    try:
+        args.series_id = request['data']['series_id']
+    except:
+        xbmcgui.Dialog().notification("Crunchyroll - Random","Unable to fetch random show id",xbmcgui.NOTIFICATION_ERROR)
+        return "False"
+    else:
+        #And then list the series
+        list_collections(args,True)
+
    
 
 def pretty(d, indent=1):
