@@ -1228,10 +1228,12 @@ def search(args):
     if not (hasattr(args,'search')):
         search = str(xbmcgui.Dialog().input('Enter search phrase')) #!!Lang!!
     else:
-        search = str(urllib.urldecode(args['search']));
-    urllib.quote_plus(search) #become url-friendly
+#        search = str(urllib.unquote_plus(args['search']));
+        search = str(urllib.unquote_plus(getattr(args,'search')));
+    search = urllib.quote_plus(search) #become url-friendly
     try: # Make sure search page is a number
-        search_page = str(int(args['search_page']))
+#        search_page = str(int(args['search_page']))
+        search_page = str(int(getattr(args,'search_page')))
     except:
         search_page = '0'
 
@@ -1284,7 +1286,8 @@ def search(args):
 
     #Add to UI
     for j in items:
-        a = {'plot': j['description'],
+#        a = {'plot': j['description'],
+        a = {'plot': re.sub(r'<[^>]*>','',j['description']),
              'url': j['link'], #Partial, starts at /series/
              'title': j['series'] + " - " + j['ordernum'] + " - " + j['name'],
              'episode': j['ordernum'],
@@ -1293,15 +1296,35 @@ def search(args):
              'id': re.search(r'[\d]*$',j['link']).group(0),
              'thumb': j['media-thumb-wide']}
         crm.add_item(args,a,isFolder=False)
-    crm.endofdirectory('none')
-    print("llama")
 #Unused data
 #        j['created']       # "X days ago"
 #        j['owner']         # production company?
 #        j['restrictions']  # Premium members only, as text
 
+    #Add item to get next page of hits
+    if (int(search_page)*6+6) < int(out_of):
+        lang_NextPage = args._lang(30512);
+        random_li =  xbmcgui.ListItem(label = lang_NextPage)
+        random_li.setInfo(type       = "Video",
+                          infoLabels = {"Title": lang_NextPage})
 
-    return #Fast exit
+        random_li.setArt({'fanart': xbmc.translatePath(args._addon.getAddonInfo('fanart')),
+                          'thumb':  xbmc.validatePath(xbmc.translatePath(args._addon.getAddonInfo('path') + "\search.png"))
+                          })
+
+        xbmcplugin.addDirectoryItem(handle     = int(sys.argv[1]),
+                                    url        = crm.build_url(crm.set_info_defaults(args,
+                                                      {'mode': 'search',
+                                                      'media_type': 'anime',
+                                                      'title': lang_NextPage
+                                                     })) +\
+                                                 '&search=' + search +\
+                                                 '&search_page=' + str(int(search_page)+1),
+                                    listitem   = random_li,
+                                    isFolder   = True)
+    crm.endofdirectory('none')
+    return
+
 
 
 def pretty(d, indent=1):

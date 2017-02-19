@@ -99,6 +99,10 @@ msgctxt "#30112"
 msgid "Alphabetical"
 msgstr ""
 
+msgctxt "#30113"
+msgid "Search"
+msgstr ""
+
 msgctxt "#30200"
 msgid "Notice"
 msgstr ""
@@ -226,3 +230,8 @@ msgstr ""
 msgctxt "#30511"
 msgid "Prefix \'Coming Soon\' as..."
 msgstr ""
+
+msgctxt "#30512"
+msgid "Next page..."
+msgstr ""
+

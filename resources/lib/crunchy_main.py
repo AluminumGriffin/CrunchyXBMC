@@ -244,6 +244,7 @@ def show_main(args):
     drama   = args._lang(30104)
     queue   = args._lang(30105)
     history = args._lang(30111)
+    search  = args._lang(30113)
 
     add_item(args,
              {'title':      queue,
@@ -260,7 +261,7 @@ def show_main(args):
               'mode':       'channels',
               'media_type': 'drama'})
     add_item(args,
-             {'title':      'Search',
+             {'title':      search,
               'mode':       'search'})
     endofdirectory()
 
