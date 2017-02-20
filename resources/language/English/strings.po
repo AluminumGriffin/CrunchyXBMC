@@ -235,3 +235,7 @@ msgctxt "#30512"
 msgid "Next page..."
 msgstr ""
 
+msgctxt "#30513"
+msgid "Search hits per page:"
+msgstr ""
+

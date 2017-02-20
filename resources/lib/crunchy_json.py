@@ -1228,80 +1228,96 @@ def search(args):
     if not (hasattr(args,'search')):
         search = str(xbmcgui.Dialog().input('Enter search phrase')) #!!Lang!!
     else:
-#        search = str(urllib.unquote_plus(args['search']));
         search = str(urllib.unquote_plus(getattr(args,'search')));
     search = urllib.quote_plus(search) #become url-friendly
     try: # Make sure search page is a number
-#        search_page = str(int(args['search_page']))
         search_page = str(int(getattr(args,'search_page')))
     except:
         search_page = '0'
 
+    hack_hits = 0   #Ugly hack, number of hits returned so far
+    hack_hits_max = int(args._addon.getSetting("search_hits"))
+    if hack_hits_max > 18:  # We are impolite to the server, so keep it sane
+        hack_hits_max = 18
+    hack_hits_max = hack_hits_max / 6 * 6   # Round down to nearest 6
+
     #Output debug info
     print ("Searching for: %s (p:%s) " % (search, search_page))
-    print ("http://www.crunchyroll.com/search_page?sp=%s&st=a&q=%s" % (search_page, search))
 
-    try: #Attempt to open and test for failure
-        url = urllib2.urlopen("http://www.crunchyroll.com/search_page?sp=%s&st=a&q=%s" % (search_page, search))
-    except:
-        xbmcgui.Dialog().notification("Crunchyroll - Search","Unable to search",xbmcgui.NOTIFICATION_ERROR)
-        return "False"
+    while hack_hits < hack_hits_max:  # hack_loop (pseudolabel)
 
-    #Pretty up the response and unzip it if needed
-    json_data = url.read().strip();
-    if url.headers.get('content-encoding', None) == 'gzip':
-        json_data = gzip.GzipFile(fileobj=StringIO.StringIO(json_data))
-        json_data = json_data.read().decode('utf-8', 'ignore')
+        print ("http://www.crunchyroll.com/search_page?sp=%s&st=a&q=%s" % (search_page, search))
 
-    #We have all data we wanted
-    url.close()
+        try: #Attempt to open and test for failure
+            url = urllib2.urlopen("http://www.crunchyroll.com/search_page?sp=%s&st=a&q=%s" % (search_page, search))
+        except:
+            xbmcgui.Dialog().notification("Crunchyroll - Search","Unable to search",xbmcgui.NOTIFICATION_ERROR)
+            return "False"
 
-    json_data = json_data[10:-2].strip() #Remove unwanted header
-    data = json.loads(json_data)         #Convert from json to list
-    out_of = data['data']['aux_count']   #Get number of total hits
+        #Pretty up the response and unzip it if needed
+        json_data = url.read().strip();
+        if url.headers.get('content-encoding', None) == 'gzip':
+            json_data = gzip.GzipFile(fileobj=StringIO.StringIO(json_data))
+            json_data = json_data.read().decode('utf-8', 'ignore')
 
-    #Test if we got any hits at all
-    if not int(out_of) > 0:
-        xbmcgui.Dialog().notification("Crunchyroll - Search","Nothing found",xbmcgui.NOTIFICATION_ERROR)
-        return "False"
+        #We have all data we wanted
+        url.close()
+
+        json_data = json_data[10:-2].strip() #Remove unwanted header
+        data = json.loads(json_data)         #Convert from json to list
+        out_of = data['data']['aux_count']   #Get number of total hits
+
+        #Test if we got any hits at all
+        print("Hamster %s" % str(search_page))
+        if (out_of is None) or (not int(out_of) > 0):
+             break
  
 
-    #Get the episode information
-    i = data['data']['aux_html']
-    i = re.sub(r'(media-thumb-wide)" src="([^"]*)[^{]*{([^}]*)}',r'{\3,"\1":"\2"}',i)
-    i = re.sub(r'^[^{]*{','{',i)
-    i = re.sub(r'}[^}]*$','}',i)
-    i = re.sub(r'}[^{]*{','}{',i)
-    arrI = i.split("}")
-    items = []
-    for j in range(0,len(arrI)):
-        if len(arrI[j]) > 0:
-            items.append(json.loads(arrI[j]+"}"))
-    #We now have all hits in a list (items) of lists
+        #Get the episode information
+        i = data['data']['aux_html']
+        i = re.sub(r'(media-thumb-wide)" src="([^"]*)[^{]*{([^}]*)}',r'{\3,"\1":"\2"}',i)
+        i = re.sub(r'^[^{]*{','{',i)
+        i = re.sub(r'}[^}]*$','}',i)
+        i = re.sub(r'}[^{]*{','}{',i)
+        arrI = i.split("}")
+        items = []
+        for j in range(0,len(arrI)):
+            if len(arrI[j]) > 0:
+                items.append(json.loads(arrI[j]+"}"))
+        #We now have all hits in a list (items) of lists
 
-    #Exit if no parsable hits
-    if not (len(items)) > 0:
-        xbmcgui.Dialog().notification("Crunchyroll - Search","Nothing to parse",xbmcgui.NOTIFICATION_ERROR)
-        return "False"
+        #Exit if no parsable hits
+#        if not (len(items) > 0:
+#            xbmcgui.Dialog().notification("Crunchyroll - Search","Nothing to parse",xbmcgui.NOTIFICATION_ERROR)
+#            return "False"
+        if len(items) == 0: # Nothing Found
+            break
 
-    #Add to UI
-    for j in items:
-#        a = {'plot': j['description'],
-        a = {'plot': re.sub(r'<[^>]*>','',j['description']),
-             'url': j['link'], #Partial, starts at /series/
-             'title': j['series'] + " - " + j['ordernum'] + " - " + j['name'],
-             'episode': j['ordernum'],
-             'media_type': 'anime',
-             'mode': 'videoplay',
-             'id': re.search(r'[\d]*$',j['link']).group(0),
-             'thumb': j['media-thumb-wide']}
-        crm.add_item(args,a,isFolder=False)
-#Unused data
-#        j['created']       # "X days ago"
-#        j['owner']         # production company?
-#        j['restrictions']  # Premium members only, as text
+        #Add to UI
+        for j in items:
+            a = {'plot': re.sub(r'<[^>]*>','',j['description']),
+                 'url': j['link'], #Partial, starts at /series/
+                 'title': j['series'] + " - " + j['ordernum'] + " - " + j['name'],
+                 'episode': j['ordernum'],
+                 'media_type': 'anime',
+                 'mode': 'videoplay',
+                 'id': re.search(r'[\d]*$',j['link']).group(0),
+                 'thumb': j['media-thumb-wide']}
+            crm.add_item(args,a,isFolder=False)
+        #Unused data
+        #    j['created']       # "X days ago"
+        #    j['owner']         # production company?
+        #    j['restrictions']  # Premium members only, as text
+
+        hack_hits = hack_hits + len(items)
+        if hack_hits < hack_hits_max:
+            search_page = str(int(search_page) + 1)
+    #hack_loop ends here.
+
 
     #Add item to get next page of hits
+    if out_of is None:  # For some reason short-circut if's didn't work
+       out_of = 0;
     if (int(search_page)*6+6) < int(out_of):
         lang_NextPage = args._lang(30512);
         random_li =  xbmcgui.ListItem(label = lang_NextPage)
