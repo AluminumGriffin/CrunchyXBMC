@@ -126,7 +126,11 @@ def set_info_defaults (args, info):
 
 def build_url (info):
     # Create params for xbmcplugin module
-    info['plot'] = info['plot'].encode('utf8')  #Ugly hack
+    try:
+       info['plot'] = info['plot'].encode('utf8')  #Ugly hack
+    except:
+       info['plot'] = info['plot'].decode('utf8')  #Uglier hack
+       info['plot'] = info['plot'].encode('utf8')  #Uglier hack
     s = sys.argv[0]    +\
         '?url='        + urllib.quote_plus(info['url'])          +\
         '&mode='       + urllib.quote_plus(info['mode'])         +\
@@ -218,7 +222,7 @@ def add_item(args,
                 cm.insert(1, (args._lang(30502), 'XBMC.RunPlugin(%s)' % s1))
 
     if (args.mode is not None and
-        args.mode in 'history|queue'):
+        args.mode in 'history|queue|search'):
         cm.insert(2, (args._lang(30503), 'XBMC.ActivateWindow(Videos,%s)' % s3))
     cm.append(('Toggle debug', 'XBMC.ToggleDebug'))
     li.addContextMenuItems(cm, replaceItems=True)

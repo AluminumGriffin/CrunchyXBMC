@@ -553,6 +553,8 @@ def list_collections(args,
                        "collection.description,",
                        "collection.complete,",
                        "collection.media_count"])
+    series_id = get_series_id(args)
+    args.__dict__['series_id'] = str(series_id) #In case we didn't have it
     options = {'series_id': args.series_id,
                'fields':    fields,
                'sort':      'desc',
@@ -740,7 +742,7 @@ def list_media_items(args, request, series_name, season, mode, fanart):
                     if media['free_available'] is False
                     else name)
         soon = (args._addon.getSetting("prefix_coming") + series_name
-                + "Episode " + str(media['episode_number'])
+                + " Episode " + str(media['episode_number'])
                     if mode == "queue"
                     else args._addon.getSetting("prefix_coming") + "Episode "
                         + str(media['episode_number']))
@@ -984,10 +986,8 @@ def get_queued(args):
                 for col in request['data']]
 
 
-def add_to_queue(args):
-    """Add selected video series to queue at Crunchyroll.
-
-    Queued series are cached in user_data.
+def get_series_id(args):
+    """Get series_id
     """
     # Get series_id
     if args.series_id is None:
@@ -999,6 +999,16 @@ def add_to_queue(args):
         series_id = request['data']['series_id']
     else:
         series_id = args.series_id
+
+    return series_id
+
+
+def add_to_queue(args):
+    """Add selected video series to queue at Crunchyroll.
+
+    Queued series are cached in user_data.
+    """
+    series_id = get_series_id(args) #ensure we have a series_id
 
     # Add the series to queue at CR if it is not there already
     if series_id in args.user_data['queue']:
@@ -1268,7 +1278,6 @@ def search(args):
         out_of = data['data']['aux_count']   #Get number of total hits
 
         #Test if we got any hits at all
-        print("Hamster %s" % str(search_page))
         if (out_of is None) or (not int(out_of) > 0):
              break
  
@@ -1287,9 +1296,6 @@ def search(args):
         #We now have all hits in a list (items) of lists
 
         #Exit if no parsable hits
-#        if not (len(items) > 0:
-#            xbmcgui.Dialog().notification("Crunchyroll - Search","Nothing to parse",xbmcgui.NOTIFICATION_ERROR)
-#            return "False"
         if len(items) == 0: # Nothing Found
             break
 
