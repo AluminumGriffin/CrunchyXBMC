@@ -740,7 +740,7 @@ def list_media_items(args, request, series_name, season, mode, fanart):
                     if media['free_available'] is False
                     else name)
         soon = (args._addon.getSetting("prefix_coming") + series_name
-                + "Episode " + str(media['episode_number'])
+                + " Episode " + str(media['episode_number'])
                     if mode == "queue"
                     else args._addon.getSetting("prefix_coming") + "Episode "
                         + str(media['episode_number']))
@@ -784,7 +784,7 @@ def list_media_items(args, request, series_name, season, mode, fanart):
         media_id = url.split('-')[-1]
 
         if int(float(playhead)) > 10 :
-            percent = (( int(float(playhead)) * 100 ) / int(float(duration)))+1
+            percent = int(round(float(playhead) / float(duration) * 100))
         else :
             percent = 0
             
@@ -1121,8 +1121,8 @@ def start_playback(args):
             item.setThumbnailImage(args.icon)
             item.setProperty('TotalTime',  args.duration)
 
-            autoresume = args._addon.getSetting("autoresume")
-            if (autoresume == "no") or (int(resumetime)<30):
+            autoresume = int(args._addon.getSetting("autoresume")) #0=no, 1=yes, 2=ask
+            if (autoresume == 0) or (int(resumetime)<30):
                 resumetime = "0"
                
             item.setProperty('ResumeTime', resumetime)
@@ -1147,7 +1147,7 @@ def start_playback(args):
             playlist_position = playlist.getposition()
 
             playback_resume = False
-            if (autoresume not in ("auto", "no")) and (int(resumetime)>0):
+            if (autoresume == 2) and (int(resumetime)>0):
                 playback_resume = True
                 resmin = int(resumetime) / 60
                 ressec = int(resumetime) % 60
@@ -1161,6 +1161,7 @@ def start_playback(args):
                     xbmc.Player().pause()
 
                 #Inform Crunchyroll about time played
+                timeplayed_old = 0
                 while playlist_position == playlist.getposition():
                     timeplayed = str(int(player.getTime()))
 
@@ -1168,15 +1169,29 @@ def start_playback(args):
                               'media_id':   args.id,
                               'playhead':   timeplayed}
 
-                    request = makeAPIRequest(args, 'log', values)
+                    if abs(timeplayed_old - int(timeplayed)) > 9: #Only update every 10nth swcond, or on jump
+                       timeplayed_old = int(timeplayed)
+                       request = makeAPIRequest(args, 'log', values)
 
-                    # Use video timeline here
-                    xbmc.sleep(5000)
+                       # Use video timeline here
+                       xbmc.sleep(100)
+
 
             except RuntimeError as e:
                 log("CR: start_playback: Player stopped playing: %r" % e)
 
             log("CR: start_playback: Finished logging: %s" % url)
+
+
+def set_progress (args):
+    """Report to server where we are
+
+    """
+    values = {'event':      'playback_status',
+              'media_id':   args.id,
+              'playhead':   str(args.time)}
+
+    request = makeAPIRequest(args, 'log', values)
 
 
 def get_random(args):

@@ -72,7 +72,7 @@ def endofdirectory(sortMethod='none'):
     # Sort methods are required in library mode
     # Set for Queue only, not for anything else
     # Also check if sorting should be allowed
-    if (sortMethod == 'user') and (xbmcplugin.getSetting(int(sys.argv[1]),"sort_queue") == 'true'):
+    if (sortMethod == 'user') and (boolSetting("sort_queue")):
        #Sort on "ordering" - ie, the order the items appeared
        xbmcplugin.addSortMethod(int(sys.argv[1]),
                                 xbmcplugin.SORT_METHOD_VIDEO_SORT_TITLE)
@@ -147,6 +147,13 @@ def build_url (info):
         '&plot='       + urllib.quote_plus(info['plot']          +'%20')
     return s
 
+def boolSetting(id):
+    """Will return true if the setting (id) is "true"
+
+    """
+#    return args._addon.getSetting(id) == "true"
+    return xbmcplugin.getSetting(int(sys.argv[1]), id) == "true"
+
 
 def add_item(args,
              info,
@@ -160,17 +167,17 @@ def add_item(args,
     info = set_info_defaults(args,info)
     u = build_url(info)
 
+    #To skip having to check if args.mode is None all the time
+    mode = "None" if (args.mode is None) else args.mode
 
     # Create list item
     li = xbmcgui.ListItem(label          = info['title'],
                           thumbnailImage = info['thumb'])
 
-    show_percent = args._addon.getSetting("show_percent")
+    percentPlayed = " "
+    if ((int(info['percent']) > 0) and (boolSetting("show_percent"))):
+        percentPlayed = " [COLOR FFbc3bfd] " + args._lang(30401) + " [/COLOR] [COLOR FF6fe335]" + str(info['percent']) + "%[/COLOR]"
 
-    if show_percent == "true":
-     percentPlayed = " " if int(info['percent']) < 1 else " [COLOR FFbc3bfd] " + args._lang(30401) + " [/COLOR] [COLOR FF6fe335]" + str(info['percent']) + "%[/COLOR]"
-    if show_percent == "false":
-	 percentPlayed = ""
 
     li.setInfo(type       = "Video",
                infoLabels = {"Title":   info['title'] + percentPlayed,
@@ -189,37 +196,41 @@ def add_item(args,
     s1  = re.sub(rex, 'add_to_queue',      u)
     s2  = re.sub(rex, 'remove_from_queue', u)
     s3  = re.sub(rex, 'list_coll', u)
+    sP  = re.sub(rex, 'set_progress', u)
 
-    cm = [(args._lang(30505), 'XBMC.Addon.OpenSettings(%s)' % args._id)]
+    #Context menu list, initialize as empty list
+    cm = []
 
-    if (args.mode is not None and
-        args.mode not in 'channels|list_categories'):
-
-        cm.insert(0, (args._lang(30504), 'XBMC.Action(Queue)'))
+    if (mode not in 'Nano|channels|list_categories') and (boolSetting("CM_queueV")):
+        cm.append((args._lang(30504), 'XBMC.Action(Queue)')) #Queue Video
 
     if not isFolder:
         li.addStreamInfo('video', {"duration": info['duration']})
         # Let XBMC know this can be played, unlike a folder
         li.setProperty('IsPlayable', 'true')
 
+        if boolSetting("CM_unwatched"):
+            cm.append((args._lang(30514), 'XBMC.RunPlugin(%s)' % (sP + "&time=0"))) #Set to Unwatched
+        if boolSetting("CM_watched"):
+            cm.append((args._lang(30513), 'XBMC.RunPlugin(%s)' % (sP + "&time=" + str(info['duration'])))) #Set to Watched
+        if (mode in 'history|queue') and (boolSetting("CM_gotoS")):
+            cm.append((args._lang(30503), 'XBMC.ActivateWindow(Videos,%s)' % s3)) #Goto Seried
+
+
+    if (not isFolder) or ((mode in 'list_coll|list_series|queue') and (isFolder)):
         if queued:
-            cm.insert(1, (args._lang(30501), 'XBMC.RunPlugin(%s)' % s2))
-        else:
-            cm.insert(1, (args._lang(30502), 'XBMC.RunPlugin(%s)' % s1))
+            if boolSetting("CM_dequeueS"):
+                cm.append((args._lang(30501), 'XBMC.RunPlugin(%s)' % s2)) #Dequeue Series
+        elif boolSetting("CM_enqueueS"):
+                cm.append((args._lang(30502), 'XBMC.RunPlugin(%s)' % s1)) #Enqueue series
 
-    else:
-        if (args.mode is not None and
-            args.mode in 'list_coll|list_series|queue'):
 
-            if queued:
-                cm.insert(1, (args._lang(30501), 'XBMC.RunPlugin(%s)' % s2))
-            else:
-                cm.insert(1, (args._lang(30502), 'XBMC.RunPlugin(%s)' % s1))
+    if boolSetting("CM_settings"):
+        cm.append((args._lang(30505), 'XBMC.Addon.OpenSettings(%s)' % args._id)) #Add-on settings"
 
-    if (args.mode is not None and
-        args.mode in 'history|queue'):
-        cm.insert(2, (args._lang(30503), 'XBMC.ActivateWindow(Videos,%s)' % s3))
-    cm.append(('Toggle debug', 'XBMC.ToggleDebug'))
+    if boolSetting("CM_toggledebug"):
+        cm.append((args._lang(30512), 'XBMC.ToggleDebug')) #Toggle Debug
+
     li.addContextMenuItems(cm, replaceItems=True)
 
     # Add item to list
@@ -399,6 +410,8 @@ def check_mode(args):
         crj.start_playback(args)
     elif mode == 'get_random':
         crj.get_random(args)
+    elif mode == 'set_progress':
+        crj.set_progress(args)
     else:
         fail(args)
 
