@@ -197,6 +197,7 @@ def add_item(args,
     s2  = re.sub(rex, 'remove_from_queue', u)
     s3  = re.sub(rex, 'list_coll', u)
     sP  = re.sub(rex, 'set_progress', u)
+    sFav  = re.sub(rex, 'add_favourite', u)
 
     #Context menu list, initialize as empty list
     cm = []
@@ -230,6 +231,9 @@ def add_item(args,
 
     if boolSetting("CM_toggledebug"):
         cm.append((args._lang(30512), 'XBMC.ToggleDebug')) #Toggle Debug
+
+    if (not isFolder) and ( boolSetting("CM_favourites")):
+        cm.append((args._lang(30518), 'XBMC.RunPlugin(%s)' % sFav)) #Add to favourites
 
     li.addContextMenuItems(cm, replaceItems=True)
 
@@ -412,6 +416,8 @@ def check_mode(args):
         crj.get_random(args)
     elif mode == 'set_progress':
         crj.set_progress(args)
+    elif mode == 'add_favourite':
+        crj.add_favourite(args)
     else:
         fail(args)
 

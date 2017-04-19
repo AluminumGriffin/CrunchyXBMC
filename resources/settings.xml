@@ -25,5 +25,6 @@
     <setting id="CM_gotoS" type="bool" label="30503" default="true" />
     <setting id="CM_settings" type="bool" label="30505" default="true" />
     <setting id="CM_toggledebug" type="bool" label="30512" default="true" />
+    <setting id="CM_favourites" type="bool" label="30518" default="true" />
   </category>
 </settings>

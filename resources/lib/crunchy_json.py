@@ -1174,7 +1174,7 @@ def start_playback(args):
                        request = makeAPIRequest(args, 'log', values)
 
                        # Use video timeline here
-                       xbmc.sleep(100)
+                       xbmc.sleep(3000)
 
 
             except RuntimeError as e:
@@ -1236,6 +1236,34 @@ def get_random(args):
         list_collections(args,True)
 
    
+
+def add_favourite (args):
+    """Add item to kodi favourites
+       Ugly direct modification, can be done via json-rpc in Krypton/17
+
+    """
+    fh = open(xbmc.translatePath('special://userdata/favourites.xml'),'r')
+    lines = fh.readlines()
+    counter = 0 #Which line we work on
+    tagOpen = False #Are we inside the <favorites>-tag?
+    found = False #Did we find </favorites>?
+    name=args.name
+    thumb=args.icon
+    id=args.id
+    while counter < len(lines):
+        if (not tagOpen):
+            tagOpen = (lines[counter].lower().find('<favourites>') > -1)
+        else:
+            if lines[counter].lower().find('</favourites>') > -1:
+              lines.insert(counter,'    <favourite name="%s" thumb="%s">PlayMedia("plugin://plugin.video.crunchyroll-takeout/?id=%s")</favourite>\n' % (name,thumb,id))
+              fh = open(fh.name,'w')
+              fh.writelines(lines)
+              found = True
+              break
+        counter += 1
+    fh.close()
+
+
 
 def pretty(d, indent=1):
     """Pretty printer for dictionaries.

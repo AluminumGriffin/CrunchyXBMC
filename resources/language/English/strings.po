@@ -243,6 +243,10 @@ msgctxt "#30515"
 msgid "Context Menu"
 msgstr ""
 
+msgctxt "#30518"
+msgid "Add to favourites"
+msgstr ""
+
 msgctxt "#30600"
 #Negative answer
 msgid "No"
