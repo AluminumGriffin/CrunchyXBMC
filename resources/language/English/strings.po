@@ -232,10 +232,39 @@ msgid "Prefix \'Coming Soon\' as..."
 msgstr ""
 
 msgctxt "#30512"
-msgid "Next page..."
+msgid "Toggle Debug"
 msgstr ""
 
 msgctxt "#30513"
+msgid "Set to Watched"
+msgstr ""
+
+msgctxt "#30514"
+msgid "Set to Unwatched"
+msgstr ""
+
+msgctxt "#30515"
+msgid "Context Menu"
+msgstr ""
+
+msgctxt "#30516"
+msgid "Next page..."
+msgstr ""
+
+msgctxt "#30517"
 msgid "Search hits per page:"
 msgstr ""
 
+msgctxt "#30600"
+#Negative answer
+msgid "No"
+msgstr ""
+
+msgctxt "#30601"
+#Affirmative answer
+msgid "Yes"
+msgstr ""
+
+msgctxt "#30602"
+msgid "Ask"
+msgstr ""
