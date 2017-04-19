@@ -191,7 +191,7 @@ def add_item(args,
                              "episode": info['episode'],
                              "lastplayed": '2000-01-01 '+str(int(info['percent']) / 60).zfill(2)+':'+str(int(info['percent']) % 60).zfill(2)+':00',
                              "sorttitle":  info['ordering'],
-                             "playcount": int(info['percent'] >= 90 and not isFolder)
+                             "playcount": int(int(info['percent']) >= 90 and not isFolder)
                             }
               )
 
@@ -218,7 +218,7 @@ def add_item(args,
             cm.append((args._lang(30514), 'XBMC.RunPlugin(%s)' % (sP + "&time=0"))) #Set to Unwatched
         if boolSetting("CM_watched"):
             cm.append((args._lang(30513), 'XBMC.RunPlugin(%s)' % (sP + "&time=" + str(info['duration'])))) #Set to Watched
-        if (mode in 'history|queue') and (boolSetting("CM_gotoS")):
+        if (mode in 'history|queue|search') and (boolSetting("CM_gotoS")):
             cm.append((args._lang(30503), 'XBMC.ActivateWindow(Videos,%s)' % s3)) #Goto Seried
 
 

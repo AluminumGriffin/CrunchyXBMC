@@ -15,7 +15,7 @@
     <setting id="show_percent" type="bool" label="30507" default="true" />
     <setting id="prefix_premium" type="text" label="30510" default="" />
     <setting id="prefix_coming" type="text" label="30511" default="Coming Soon - " />
-    <setting id="search_hits" type="labelenum" values="6|12|18" label="30513" default="6" />
+    <setting id="search_hits" type="labelenum" values="6|12|18" label="30517" default="6" />
   </category>
   <category label="30515"> <!-- Context menu -->
     <setting id="CM_queueV" type="bool" label="30504" default="true" />

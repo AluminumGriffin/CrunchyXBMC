@@ -1340,7 +1340,7 @@ def search(args):
     if out_of is None:  # For some reason short-circut if's didn't work
        out_of = 0;
     if (int(search_page)*6+6) < int(out_of):
-        lang_NextPage = args._lang(30512);
+        lang_NextPage = args._lang(30516);
         random_li =  xbmcgui.ListItem(label = lang_NextPage)
         random_li.setInfo(type       = "Video",
                           infoLabels = {"Title": lang_NextPage})
