@@ -231,7 +231,7 @@ def add_item(args,
     if boolSetting("CM_toggledebug"):
         cm.append((args._lang(30512), 'XBMC.ToggleDebug')) #Toggle Debug
 
-    li.addContextMenuItems(cm, replaceItems=True)
+    li.addContextMenuItems(cm, replaceItems=(not boolSetting("CM_kodi")))
 
     # Add item to list
     xbmcplugin.addDirectoryItem(handle     = int(sys.argv[1]),

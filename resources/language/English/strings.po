@@ -239,8 +239,8 @@ msgctxt "#30514"
 msgid "Set to Unwatched"
 msgstr ""
 
-msgctxt "#30515"
-msgid "Context Menu"
+msgctxt "#30519"
+msgid "Kodi default menu"
 msgstr ""
 
 msgctxt "#30600"
