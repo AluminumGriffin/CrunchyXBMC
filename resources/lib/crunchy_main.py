@@ -214,7 +214,7 @@ def add_item(args,
         if boolSetting("CM_watched"):
             cm.append((args._lang(30513), 'XBMC.RunPlugin(%s)' % (sP + "&time=" + str(info['duration'])))) #Set to Watched
         if (mode in 'history|queue') and (boolSetting("CM_gotoS")):
-            cm.append((args._lang(30503), 'XBMC.ActivateWindow(Videos,%s)' % s3)) #Goto Seried
+            cm.append((args._lang(30503), 'XBMC.ActivateWindow(Videos,%s)' % s3)) #Goto Series
 
 
     if (not isFolder) or ((mode in 'list_coll|list_series|queue') and (isFolder)):
@@ -411,7 +411,7 @@ def check_mode(args):
     elif mode == 'get_random':
         crj.get_random(args)
     elif mode == 'set_progress':
-        crj.set_progress(args)
+        crj.set_progress(args,args.time)
     else:
         fail(args)
 
