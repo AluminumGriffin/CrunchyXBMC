@@ -126,6 +126,11 @@ def set_info_defaults (args,info):
 
 def build_url (info):
     # Create params for xbmcplugin module
+    try:
+       info['plot'] = info['plot'].encode('utf8')  #Ugly hack
+    except:
+       info['plot'] = info['plot'].decode('utf8')  #Uglier hack
+       info['plot'] = info['plot'].encode('utf8')  #Uglier hack
     s = sys.argv[0]    +\
         '?url='        + urllib.quote_plus(info['url'])          +\
         '&mode='       + urllib.quote_plus(info['mode'])         +\
@@ -186,7 +191,7 @@ def add_item(args,
                              "episode": info['episode'],
                              "lastplayed": '2000-01-01 '+str(int(info['percent']) / 60).zfill(2)+':'+str(int(info['percent']) % 60).zfill(2)+':00',
                              "sorttitle":  info['ordering'],
-                             "playcount": int(info['percent'] >= 90 and not isFolder)
+                             "playcount": int(int(info['percent']) >= 90 and not isFolder)
                             }
               )
 
@@ -213,8 +218,8 @@ def add_item(args,
             cm.append((args._lang(30514), 'XBMC.RunPlugin(%s)' % (sP + "&time=0"))) #Set to Unwatched
         if boolSetting("CM_watched"):
             cm.append((args._lang(30513), 'XBMC.RunPlugin(%s)' % (sP + "&time=" + str(info['duration'])))) #Set to Watched
-        if (mode in 'history|queue') and (boolSetting("CM_gotoS")):
-            cm.append((args._lang(30503), 'XBMC.ActivateWindow(Videos,%s)' % s3)) #Goto Series
+        if (mode in 'history|queue|search') and (boolSetting("CM_gotoS")):
+            cm.append((args._lang(30503), 'XBMC.ActivateWindow(Videos,%s)' % s3)) #Goto Seried
 
 
     if (not isFolder) or ((mode in 'list_coll|list_series|queue') and (isFolder)):
@@ -254,6 +259,7 @@ def show_main(args):
     drama   = args._lang(30104)
     queue   = args._lang(30105)
     history = args._lang(30111)
+    search  = args._lang(30113)
 
     add_item(args,
              {'title':      queue,
@@ -269,6 +275,9 @@ def show_main(args):
              {'title':      drama,
               'mode':       'channels',
               'media_type': 'drama'})
+    add_item(args,
+             {'title':      search,
+              'mode':       'search'})
     endofdirectory()
 
 
@@ -410,6 +419,8 @@ def check_mode(args):
         crj.start_playback(args)
     elif mode == 'get_random':
         crj.get_random(args)
+    elif mode == 'search':
+        crj.search(args)
     elif mode == 'set_progress':
         crj.set_progress(args,args.time)
     else:

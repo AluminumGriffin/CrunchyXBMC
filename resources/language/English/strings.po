@@ -99,6 +99,10 @@ msgctxt "#30112"
 msgid "Alphabetical"
 msgstr ""
 
+msgctxt "#30113"
+msgid "Search"
+msgstr ""
+
 msgctxt "#30200"
 msgid "Notice"
 msgstr ""
@@ -241,6 +245,14 @@ msgstr ""
 
 msgctxt "#30515"
 msgid "Context Menu"
+msgstr ""
+
+msgctxt "#30516"
+msgid "Next page..."
+msgstr ""
+
+msgctxt "#30517"
+msgid "Search hits per page:"
 msgstr ""
 
 msgctxt "#30519"

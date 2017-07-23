@@ -553,6 +553,8 @@ def list_collections(args,
                        "collection.description,",
                        "collection.complete,",
                        "collection.media_count"])
+    series_id = get_series_id(args)
+    args.__dict__['series_id'] = str(series_id) #In case we didn't have it
     options = {'series_id': args.series_id,
                'fields':    fields,
                'sort':      'desc',
@@ -984,10 +986,8 @@ def get_queued(args):
                 for col in request['data']]
 
 
-def add_to_queue(args):
-    """Add selected video series to queue at Crunchyroll.
-
-    Queued series are cached in user_data.
+def get_series_id(args):
+    """Get series_id
     """
     # Get series_id
     if args.series_id is None:
@@ -999,6 +999,16 @@ def add_to_queue(args):
         series_id = request['data']['series_id']
     else:
         series_id = args.series_id
+
+    return series_id
+
+
+def add_to_queue(args):
+    """Add selected video series to queue at Crunchyroll.
+
+    Queued series are cached in user_data.
+    """
+    series_id = get_series_id(args) #ensure we have a series_id
 
     # Add the series to queue at CR if it is not there already
     if series_id in args.user_data['queue']:
@@ -1116,6 +1126,7 @@ def start_playback(args):
                                           succeeded=False,
                                           listitem=xbmcgui.ListItem())
                 return
+
 
             item = xbmcgui.ListItem(args.name, path=url)
             # TVShowTitle, Season, and Episode are used by the Trakt.tv add-on to determine what is being played
@@ -1242,7 +1253,124 @@ def get_random(args):
         #And then list the series
         list_collections(args,True)
 
-   
+
+def search(args):
+    """Search for show
+
+    """
+    if not (hasattr(args,'search')):
+        search = str(xbmcgui.Dialog().input('Enter search phrase')) #!!Lang!!
+    else:
+        search = str(urllib.unquote_plus(getattr(args,'search')));
+    search = urllib.quote_plus(search) #become url-friendly
+    try: # Make sure search page is a number
+        search_page = str(int(getattr(args,'search_page')))
+    except:
+        search_page = '0'
+
+    hack_hits = 0   #Ugly hack, number of hits returned so far
+    hack_hits_max = int(args._addon.getSetting("search_hits"))
+    if hack_hits_max > 18:  # We are impolite to the server, so keep it sane
+        hack_hits_max = 18
+    hack_hits_max = hack_hits_max / 6 * 6   # Round down to nearest 6
+
+    #Output debug info
+    print ("Searching for: %s (p:%s) " % (search, search_page))
+
+    while hack_hits < hack_hits_max:  # hack_loop (pseudolabel)
+
+        print ("http://www.crunchyroll.com/search_page?sp=%s&st=a&q=%s" % (search_page, search))
+
+        try: #Attempt to open and test for failure
+            url = urllib2.urlopen("http://www.crunchyroll.com/search_page?sp=%s&st=a&q=%s" % (search_page, search))
+        except:
+            xbmcgui.Dialog().notification("Crunchyroll - Search","Unable to search",xbmcgui.NOTIFICATION_ERROR)
+            return "False"
+
+        #Pretty up the response and unzip it if needed
+        json_data = url.read().strip();
+        if url.headers.get('content-encoding', None) == 'gzip':
+            json_data = gzip.GzipFile(fileobj=StringIO.StringIO(json_data))
+            json_data = json_data.read().decode('utf-8', 'ignore')
+
+        #We have all data we wanted
+        url.close()
+
+        json_data = json_data[10:-2].strip() #Remove unwanted header
+        data = json.loads(json_data)         #Convert from json to list
+        out_of = data['data']['aux_count']   #Get number of total hits
+
+        #Test if we got any hits at all
+        if (out_of is None) or (not int(out_of) > 0):
+             break
+ 
+
+        #Get the episode information
+        i = data['data']['aux_html']
+        i = re.sub(r'(media-thumb-wide)" src="([^"]*)[^{]*{([^}]*)}',r'{\3,"\1":"\2"}',i)
+        i = re.sub(r'^[^{]*{','{',i)
+        i = re.sub(r'}[^}]*$','}',i)
+        i = re.sub(r'}[^{]*{','}{',i)
+        arrI = i.split("}")
+        items = []
+        for j in range(0,len(arrI)):
+            if len(arrI[j]) > 0:
+                items.append(json.loads(arrI[j]+"}"))
+        #We now have all hits in a list (items) of lists
+
+        #Exit if no parsable hits
+        if len(items) == 0: # Nothing Found
+            break
+
+        #Add to UI
+        for j in items:
+            a = {'plot': re.sub(r'<[^>]*>','',j['description']),
+                 'url': j['link'], #Partial, starts at /series/
+                 'title': j['series'] + " - " + j['ordernum'] + " - " + j['name'],
+                 'episode': j['ordernum'],
+                 'media_type': 'anime',
+                 'mode': 'videoplay',
+                 'id': re.search(r'[\d]*$',j['link']).group(0),
+                 'thumb': j['media-thumb-wide']}
+            crm.add_item(args,a,isFolder=False)
+        #Unused data
+        #    j['created']       # "X days ago"
+        #    j['owner']         # production company?
+        #    j['restrictions']  # Premium members only, as text
+
+        hack_hits = hack_hits + len(items)
+        if hack_hits < hack_hits_max:
+            search_page = str(int(search_page) + 1)
+    #hack_loop ends here.
+
+
+    #Add item to get next page of hits
+    if out_of is None:  # For some reason short-circut if's didn't work
+       out_of = 0;
+    if (int(search_page)*6+6) < int(out_of):
+        lang_NextPage = args._lang(30516);
+        random_li =  xbmcgui.ListItem(label = lang_NextPage)
+        random_li.setInfo(type       = "Video",
+                          infoLabels = {"Title": lang_NextPage})
+
+        random_li.setArt({'fanart': xbmc.translatePath(args._addon.getAddonInfo('fanart')),
+                          'thumb':  xbmc.validatePath(xbmc.translatePath(args._addon.getAddonInfo('path') + "\search.png"))
+                          })
+
+        xbmcplugin.addDirectoryItem(handle     = int(sys.argv[1]),
+                                    url        = crm.build_url(crm.set_info_defaults(args,
+                                                      {'mode': 'search',
+                                                      'media_type': 'anime',
+                                                      'title': lang_NextPage
+                                                     })) +\
+                                                 '&search=' + search +\
+                                                 '&search_page=' + str(int(search_page)+1),
+                                    listitem   = random_li,
+                                    isFolder   = True)
+    crm.endofdirectory('none')
+    return
+
+
 
 def pretty(d, indent=1):
     """Pretty printer for dictionaries.
