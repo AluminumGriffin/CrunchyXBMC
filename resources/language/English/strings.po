@@ -255,6 +255,10 @@ msgctxt "#30517"
 msgid "Search hits per page:"
 msgstr ""
 
+msgctxt "#30519"
+msgid "Kodi default menu"
+msgstr ""
+
 msgctxt "#30600"
 #Negative answer
 msgid "No"

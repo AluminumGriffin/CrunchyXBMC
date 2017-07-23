@@ -18,6 +18,7 @@
     <setting id="search_hits" type="labelenum" values="6|12|18" label="30517" default="6" />
   </category>
   <category label="30515"> <!-- Context menu -->
+    <setting id="CM_kodi" type="bool" label="30519" default="false" />
     <setting id="CM_queueV" type="bool" label="30504" default="true" />
     <setting id="CM_enqueueS" type="bool" label="30502" default="true" />
     <setting id="CM_dequeueS" type="bool" label="30501" default="true" />

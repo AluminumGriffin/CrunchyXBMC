@@ -1118,8 +1118,16 @@ def start_playback(args):
                 url = allurl['mid']
             elif 'low' in allurl:
                 url = allurl['low']
-            else:
+            elif len(allurl) > 0:
                 url = allurl['adaptive']
+            else: #no streams to play
+                xbmcgui.Dialog().notification("Crunchyroll - start_playback","No video found",xbmcgui.NOTIFICATION_INFO)
+                xbmcplugin.setResolvedUrl(int(sys.argv[1]), #Suppress kodi's "plugin failed"-dialog
+                                          succeeded=False,
+                                          listitem=xbmcgui.ListItem())
+                return
+
+
 
             item = xbmcgui.ListItem(args.name, path=url)
             # TVShowTitle, Season, and Episode are used by the Trakt.tv add-on to determine what is being played
@@ -1148,8 +1156,11 @@ def start_playback(args):
 
             timeplayed = resumetime
 
-            # Give the player time to start up
-            time.sleep(3)
+            # Give the player time to start up - but not longer
+            for wait in range(1,30): #tenths of secs
+                if xbmc.Player().isPlaying():
+                    break
+                time.sleep(0.1)
 
             s = "CR: startPlayback: player is playing == %d"
             log(s % player.isPlaying(), xbmc.LOGDEBUG)
@@ -1175,16 +1186,12 @@ def start_playback(args):
                 while playlist_position == playlist.getposition():
                     timeplayed = str(int(player.getTime()))
 
-                    values = {'event':      'playback_status',
-                              'media_id':   args.id,
-                              'playhead':   timeplayed}
-
                     if abs(timeplayed_old - int(timeplayed)) > 9: #Only update every 10nth swcond, or on jump
                        timeplayed_old = int(timeplayed)
-                       request = makeAPIRequest(args, 'log', values)
+                       set_progress(args,timeplayed) #Reduce repeated code
 
                        # Use video timeline here
-                       xbmc.sleep(100)
+                       xbmc.sleep(3000)
 
 
             except RuntimeError as e:
@@ -1193,15 +1200,17 @@ def start_playback(args):
             log("CR: start_playback: Finished logging: %s" % url)
 
 
-def set_progress (args):
+def set_progress (args, 
+                  time = -1):
     """Report to server where we are
 
     """
-    values = {'event':      'playback_status',
-              'media_id':   args.id,
-              'playhead':   str(args.time)}
+    if int(time) > -1:
+        values = {'event':      'playback_status',
+                  'media_id':   args.id,
+                  'playhead':   str(time)}
 
-    request = makeAPIRequest(args, 'log', values)
+        request = makeAPIRequest(args, 'log', values)
 
 
 def get_random(args):

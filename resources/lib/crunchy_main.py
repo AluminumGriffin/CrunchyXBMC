@@ -92,7 +92,7 @@ def endofdirectory(sortMethod='none'):
                               updateListing = dontAddToHierarchy)
 
 
-def set_info_defaults (args, info):
+def set_info_defaults (args,info):
     # Defaults in dict. Use 'None' instead of None so it is compatible for
     # quote_plus in parseArgs.
     info.setdefault('url',          'None')
@@ -236,7 +236,7 @@ def add_item(args,
     if boolSetting("CM_toggledebug"):
         cm.append((args._lang(30512), 'XBMC.ToggleDebug')) #Toggle Debug
 
-    li.addContextMenuItems(cm, replaceItems=True)
+    li.addContextMenuItems(cm, replaceItems=(not boolSetting("CM_kodi")))
 
     # Add item to list
     xbmcplugin.addDirectoryItem(handle     = int(sys.argv[1]),
@@ -422,7 +422,7 @@ def check_mode(args):
     elif mode == 'search':
         crj.search(args)
     elif mode == 'set_progress':
-        crj.set_progress(args)
+        crj.set_progress(args,args.time)
     else:
         fail(args)
 
