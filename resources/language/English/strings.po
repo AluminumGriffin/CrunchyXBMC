@@ -247,6 +247,11 @@ msgctxt "#30519"
 msgid "Kodi default menu"
 msgstr ""
 
+msgctxt "#30520"
+#Will have a quality appended to it "Play at" will be shown like "Play at 480p"
+msgid "Play at"
+msgstr ""
+
 msgctxt "#30600"
 #Negative answer
 msgid "No"
@@ -258,5 +263,16 @@ msgid "Yes"
 msgstr ""
 
 msgctxt "#30602"
+#Indicate that the add-on should ask
 msgid "Ask"
+msgstr ""
+
+msgctxt "#30603"
+#On / Activated (opposite of "off")
+msgid "On"
+msgstr ""
+
+msgctxt "#30604"
+#Off / Not activated (opposite of "on")
+msgid "Off"
 msgstr ""

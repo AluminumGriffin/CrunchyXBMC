@@ -147,12 +147,21 @@ def build_url (info):
         '&plot='       + urllib.quote_plus(info['plot']          +'%20')
     return s
 
+
 def boolSetting(id):
     """Will return true if the setting (id) is "true"
 
     """
 #    return args._addon.getSetting(id) == "true"
     return xbmcplugin.getSetting(int(sys.argv[1]), id) == "true"
+
+
+def intSetting(id):
+    """Will return the setting (id) as an integer
+
+    """
+#    return int(args._addon.getSetting(id))
+    return int(xbmcplugin.getSetting(int(sys.argv[1]), id))
 
 
 def add_item(args,
@@ -215,6 +224,8 @@ def add_item(args,
             cm.append((args._lang(30513), 'XBMC.RunPlugin(%s)' % (sP + "&time=" + str(info['duration'])))) #Set to Watched
         if (mode in 'history|queue') and (boolSetting("CM_gotoS")):
             cm.append((args._lang(30503), 'XBMC.ActivateWindow(Videos,%s)' % s3)) #Goto Series
+        if intSetting("CM_playAt") > 0:
+            cm.append((args._lang(30520) + " " + args._lang([30004,30005,30006,30008,30012][intSetting("CM_playAt")-1]), 'XBMC.PlayMedia(%s)' % (u + "&quality=" + str(intSetting("CM_playAt")-1)))) #Play at different quality
 
 
     if (not isFolder) or ((mode in 'list_coll|list_series|queue') and (isFolder)):

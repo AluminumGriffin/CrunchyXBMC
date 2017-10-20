@@ -772,7 +772,7 @@ def list_media_items(args, request, series_name, season, mode, fanart):
                         else str(media['duration']))
         # Current playback point
         playhead = ("0"
-                        if media['available'] is False
+                        if (media['available'] is False or not 'playhead' in media)
                         else str(media['playhead']))
 
         # Adding published date instead
@@ -1052,7 +1052,10 @@ def start_playback(args):
 
     """
     res_quality = ['low', 'mid', 'high', 'ultra', 'adaptive']
-    quality     = res_quality[int(args._addon.getSetting("video_quality"))]
+    if not hasattr(args, 'quality'): #Normal playback
+        quality     = res_quality[int(args._addon.getSetting("video_quality"))]
+    else: #One-off at different quality
+        quality     = res_quality[int(args.quality)]
 
     fields = "".join(["media.episode_number,",
                       "media.playhead,",

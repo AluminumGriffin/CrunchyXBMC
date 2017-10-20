@@ -19,6 +19,7 @@
   <category label="30515"> <!-- Context menu -->
     <setting id="CM_kodi" type="bool" label="30519" default="false" />
     <setting id="CM_queueV" type="bool" label="30504" default="true" />
+    <setting id="CM_playAt" type="select" lvalues="30604|30004|30005|30006|30008|30012" label="30520" default="0" /> <!-- keep order same as video_quality (above), prefix with off (30604) -->
     <setting id="CM_enqueueS" type="bool" label="30502" default="true" />
     <setting id="CM_dequeueS" type="bool" label="30501" default="true" />
     <setting id="CM_watched" type="bool" label="30513" default="false" />
